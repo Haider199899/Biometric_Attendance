@@ -3,7 +3,11 @@ const {sequelize}=require('../config/db_connect_config')
 
 const Employee = sequelize.define('Employee', {
   // Model attributes are defined here
- 
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
   name: {
     type: DataTypes.STRING
   },

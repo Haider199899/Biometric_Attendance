@@ -10,7 +10,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       attendanceTime: {
-        type: Sequelize.DATE
+        type: Sequelize.STRING
       },
       employeeId: {
         type: Sequelize.DataTypes.INTEGER,

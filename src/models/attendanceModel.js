@@ -1,17 +1,15 @@
 const { DataTypes } = require('sequelize');
-const {sequelize}=require('../config/db_connect_config')
+const {sequelize}=require('../config/db_connect_config');
+const { Employee } = require('./employee.model');
 
 const Attendance = sequelize.define('Attendance', {
-  // Model attributes are defined here
- 
+  
   attendanceTime: {
-    type: DataTypes.DATE
+    type: DataTypes.STRING
   },
-  employeeId:{
-    type:DataTypes.INTEGER
- }
-
 });
+
+Attendance.belongsTo(Employee, { foreignKey: 'employeeId' });
 
 
 module.exports={Attendance}

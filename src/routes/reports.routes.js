@@ -1,6 +1,8 @@
 const express=require('express');
 const reportRouter=express.Router()
-const {weeklyReport} = require("../controllers/report.controller");
-reportRouter.get('/weeklyReport',weeklyReport)
+const {reportOfAllEmployee, reportOfEmployee} = require("../controllers/report.controller");
+reportRouter.get('/report/reportOfAllEmployees',reportOfAllEmployee);
+reportRouter.get('/report/reportOfEmployee',reportOfEmployee);
+
 //reportRouter.get('/monthlyReport')
 module.exports=reportRouter
