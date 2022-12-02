@@ -16,10 +16,10 @@ const reportOfEmployee = async (req, res) => {
     const fromDate = req.query.fromDate;
     const toDate = req.query.toDate;
     const employee = await Employee.findOne({ where: { deviceId: id } }); 
-    const weeklyData = await attendanceReport(fromDate,toDate)
-    employee.dataValues.weeklyData = weeklyData
-    console.log(employee.dataValues.weeklyData.length)
-if(employee.dataValues.weeklyData.length!=0) {
+    const attendanceData = await attendanceReport(fromDate,toDate)
+    employee.dataValues.attendanceData = attendanceData
+    
+if(employee.dataValues.attendanceData.length!=0) {
     return res.status(200).send({
       data: employee,
       success: false,
@@ -41,10 +41,10 @@ const reportOfAllEmployee = async (req, res) => {
     try {
       const fromDate = req.query.fromDate;
       const toDate = req.query.toDate;
-      const weeklyData = await attendanceReport(fromDate,toDate)
-  if(weeklyData.length!=0) {
+      const attendanceData = await attendanceReport(fromDate,toDate)
+  if(attendanceData.length!=0) {
       return res.status(200).send({
-        data: weeklyData,
+        data: attendanceData,
         success: false,
       });
   }else{
