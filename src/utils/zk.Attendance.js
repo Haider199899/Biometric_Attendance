@@ -32,10 +32,9 @@ const attendanceData = () =>
       }
     });
   });
-const syncWithDatabase = async (req, res) => {
+const syncWithDatabase = async (req,res,next) => {
   try {
     let data = await attendanceData();
-    console.log(data);
     let count = 0;
     for (let i = 0; i < data.length; i++) {
       //check does employee exist in database
@@ -77,9 +76,7 @@ const syncWithDatabase = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(400).send({
-      message: "Operation unsuccessful due to " + error,
-    });
+    next(error)
   }
 };
 module.exports = {
