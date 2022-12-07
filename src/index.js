@@ -4,8 +4,7 @@ const dotenv = require('dotenv')
 const { sequelize } = require('./config/db_connect_config')
 
 const employeeRouter = require('./routes/employee.routes')
-const attendanceRouter = require('./routes/attendance.routes')
-const reportRouter=require('./routes/reports.routes')
+const attendanceRouter = require('./routes/attendance.routes');
 
 const app = express()
 
@@ -29,7 +28,7 @@ const connect = async () => {
 connect()
 app.use(employeeRouter)
 app.use(attendanceRouter)
-app.use(reportRouter)
+
 // simple route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Biometric Attendance application.' })

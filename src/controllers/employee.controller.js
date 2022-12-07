@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const { Employee } = require("../models/employee.model");
 dotenv.config({ path: require("find-config")(".env") });
 const Login = (req, res) => {
-  let { email, password } = req.body;
+  const { email, password } = req.body;
   if (email === "abakar@techrivers.com") {
     if (password === "abakar@@hr007") {
       //signing JWT Token
@@ -16,13 +16,13 @@ const Login = (req, res) => {
         accessToken: token,
       });
     } else {
-      return res.status(401).send({
+      return res.status(403).send({
         message: "Email or password is incorrect!",
         success: false,
       });
     }
   } else {
-    return res.status(404).send({
+    return res.status(403).send({
       message: "Email or password is incorrect!",
       success: false,
     });
@@ -30,10 +30,10 @@ const Login = (req, res) => {
 };
 const addEmployee = async (req, res) => {
   try {
-    let token = req.headers.token;
-    let verify = jwt.verify(token, process.env.JWT_SECRET);
+    const token = req.headers.token;
+    const verify = jwt.verify(token, process.env.JWT_SECRET);
     if (verify) {
-      let { name, designation, email, deviceId } = req.body;
+      const { name, designation, email, deviceId } = req.body;
       const empFind = await Employee.findOne({ where: { email: email } });
       const deviceIdFound = await Employee.findOne({
         where: { deviceId: deviceId },
@@ -53,25 +53,25 @@ const addEmployee = async (req, res) => {
             success: true,
           });
         } else {
-          return res.status(404).send({
+          return res.status(403).send({
             data: "Employee already exist with that registeration number!",
             success: false,
           });
         }
       } else {
-        return res.status(404).send({
+        return res.status(403).send({
           data: "Employee already exist with that email!",
           success: false,
         });
       }
     } else {
-      return res.status(404).send({
+      return res.status(401).send({
         data: "You are unauthorized to perform that action!",
         success: false,
       });
     }
   } catch (error) {
-    return res.status(404).send({
+    return res.status(500).send({
       data: "You are unauthorized to perform that action!" + error,
       success: false,
     });
@@ -79,10 +79,10 @@ const addEmployee = async (req, res) => {
 };
 const getEmployee = async (req, res) => {
   try {
-    let token = req.headers.token;
+    const token = req.headers.token;
     const verify = jwt.verify(token, process.env.JWT_SECRET);
     if (verify) {
-      const id = req.query.id;
+      const id = req.params.id;
       const employee = await Employee.findOne({ where: { id: id } });
       if (employee) {
         return res.status(200).send({
@@ -91,19 +91,19 @@ const getEmployee = async (req, res) => {
           success: true,
         });
       } else {
-        return res.status(200).send({
+        return res.status(404).send({
           messgae: "Employee not exist!",
           success: false,
         });
       }
     } else {
-      return res.status(400).send({
+      return res.status(401).send({
         message: "You are not authorized to perform that action!",
         success: false,
       });
     }
   } catch (error) {
-    return res.status(400).send({
+    return res.status(500).send({
       message: "You cant perform that action due to " + error,
       success: false,
     });
@@ -127,13 +127,13 @@ const getAllEmployee = async (req, res) => {
         });
       }
     } else {
-      return res.status(404).send({
+      return res.status(401).send({
         message: "You are unauthorized to perform that action!",
         success: false,
       });
     }
   } catch (error) {
-    return res.status(404).send({
+    return res.status(500).send({
       message: "You are unauthorized to perform that action!" + error,
       success: false,
     });
@@ -141,17 +141,17 @@ const getAllEmployee = async (req, res) => {
 };
 const updateEmployee = async (req, res) => {
   try {
-    let token = req.headers.token;
-    let verify = jwt.verify(token, process.env.JWT_SECRET);
+    const token = req.headers.token;
+    const verify = jwt.verify(token, process.env.JWT_SECRET);
 
     if (verify) {
-      let id = req.query.id;
-      let { name, designation, email, deviceId } = req.query;
-      const empFindbyId = await Employee.findOne({ where: { id: id } });
+      const id = req.params.id;
+      const { name, designation, email, deviceId } = req.body;
+      const empFind = await Employee.findOne({ where: { id: id } });
       const empFindbyEmail = await Employee.findOne({
         where: { email: email },
       });
-      if (empFindbyId) {
+      if (empFind) {
         if (!empFindbyEmail) {
           empFind.name = name;
           empFind.designation = designation;
@@ -163,8 +163,8 @@ const updateEmployee = async (req, res) => {
             success: true,
           });
         } else {
-          return res.status(200).send({
-            message: 'Employee already exist with that email!',
+          return res.status(403).send({
+            message: 'Employee already exist with that email or deviceId!',
             success: true,
           });
         }
@@ -175,13 +175,13 @@ const updateEmployee = async (req, res) => {
         });
       }
     } else {
-      return res.status(404).send({
+      return res.status(401).send({
         data: "You are unauthorized to perform that action!",
         success: false,
       });
     }
   } catch (error) {
-    return res.status(404).send({
+    return res.status(500).send({
       data: "You are unauthorized to perform that action!" + error,
       success: false,
     });

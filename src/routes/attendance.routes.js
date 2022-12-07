@@ -4,7 +4,6 @@ const utils=require('../utils/zk.Attendance')
 const controller=require('../controllers/attendance.controller');
 const dotenv=require('dotenv');
 dotenv.config({ path: '.env'})
-attendanceRouter.get('/attendance/allAttendanceByDate',controller.getAllAttendanceByDate)
-attendanceRouter.get('/attendance/attendanceOfUserByDate',controller.getAttendanceOfUserByDate)
-attendanceRouter.post('/attendance/sync',utils.syncWithDatabase)
+attendanceRouter.get('/attendances/employees',controller.getAllAttendanceByDate)
+attendanceRouter.post('/attendances/sync',utils.syncWithDatabase)
 module.exports=attendanceRouter;
