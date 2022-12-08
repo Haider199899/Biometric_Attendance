@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const redis = require('redis');
+
 const { Employee } = require("../models/employee.model");
 dotenv.config({ path:".env"});
-const client = redis.createClient();
+
 const Login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -13,16 +13,7 @@ const Login = async (req, res, next) => {
         const token = jwt.sign({ email }, process.env.JWT_SECRET, {
           expiresIn: 86400,
         });
-        //connecting to redis client and saving token into redis
-        client.on('connect',()=>{
-          console.log('Connected to Redis!')
-        })
-        client.on('error',()=>{
-          console.log('Not connected to Redis!')
-        })
-        await client.connect()
-        client.set(email,token)
-        console.log(await client.get(email))
+        
 
         return res.status(200).send({
           message: "Login successfull",

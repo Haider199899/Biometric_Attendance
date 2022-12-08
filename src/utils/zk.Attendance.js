@@ -7,7 +7,7 @@ console.log(process.env.ZK_IP);
 zk = new zklib({
   ip: process.env.ZK_IP,
   port: process.env.ZK_PORT,
-  inport: process.env.ZK_INPORT,
+  inport:process.env.ZK_INPORT
 });
 
 const attendanceData = () =>
