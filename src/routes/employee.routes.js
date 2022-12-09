@@ -7,7 +7,7 @@ const attController = require("../controllers/attendance.controller");
 const auth = require("../middlewares/auth");
 
 router.post(
-  "/hr/login",
+  "/auth/login",
   celebrate({
     [Segments.BODY]: Joi.object().keys({
       email: Joi.string().required().email(),
@@ -16,6 +16,21 @@ router.post(
   }),
   empController.Login
 );
+
+router.get('/auth/recover',auth,
+celebrate({
+  [Segments.BODY]: Joi.object().keys({
+    email: Joi.string().required().email()
+  }),
+}),
+  empController.recoverPassword
+)
+router.get('/auth/reset/:token',empController.resetPassword)
+router.get('/auth/reset',(req,res)=>{
+  return res.status(200).send({
+    message:"Welcome to change pass page!"
+  })
+})
 router.post(
   "/employees",
   auth,

@@ -1,11 +1,9 @@
 const {Sequelize}=require('sequelize');
-const dbConfig=require('./db.config')
-const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
-  host: dbConfig.HOST,
-  port:dbConfig.port,
-  dialect: 'postgres',/* one of 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql' | 'db2' | 'snowflake' | 'oracle' */
+const dotenv = require('dotenv')
+dotenv.config({path:'.env'})
+const sequelize = new Sequelize(process.env.DB, process.env.DB_USER, process.env.PASSWORD, {
+  host: process.env.HOST,
+  port:process.env.DB_PORT,
+  dialect: process.env.DIALECT
 });
-
-//sequelize.sync({ force: true });
-
 module.exports={sequelize}
