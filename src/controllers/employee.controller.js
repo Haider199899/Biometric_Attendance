@@ -5,7 +5,7 @@ const sqlite3 = require('sqlite3');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const { Employee } = require("../models/employee.model");
-const db = new sqlite3.Database('passwords.db', sqlite3.OPEN_READONLY, (err) => {
+const db = new sqlite3.Database('passwords.db', sqlite3.OPEN_READWRITE, (err) => {
   if (err) {
     console.log(err.message);
   }
@@ -38,9 +38,9 @@ const Login = async (req, res, next) => {
               accessToken: token,
             });
           } else {
-            return res.status(404).send({
+            return res.status(403).send({
               message: "Email or password is incorrect",
-              success: false
+              success: true
             });
           }
         })
@@ -58,47 +58,45 @@ const Login = async (req, res, next) => {
     next(error);
   }
 };
-//Recover Password - Generates token and Sends password reset email
-const recoverPassword = async (req, res, next) => {
+//================================================================= Recover Password ===============================================================================//
+
+//Generates token and Sends password reset email
+const sendRequest = async (req, res, next) => {
   try {
     const email = req.query.email;
-    if (email === process.env.TO_RESET_EMAIL) {
+    console.log(email)
 
-      const token = jwt.sign({ email }, process.env.JWT_SECRET_RESET_PASS, { expiresIn: process.env.JWT_EXPIRATION_TIME_PASS_RECOVER })
+    const token = jwt.sign({ email }, process.env.JWT_SECRET_RESET_PASS, { expiresIn: process.env.JWT_EXPIRATION_TIME_PASS_RECOVER })
 
-      let link = "http://" + process.env.HOST + ":" + process.env.PORT + "/auth/reset/" + token;
-      const mailOptions = {
-        to: process.env.TO_RESET_EMAIL,
-        from: process.env.FROM_RESET_EMAIL,
-        subject: "Password change request",
-        text: `Hi \n 
+    let link = "http://" + process.env.HOST + ":" + process.env.PORT + "/auth/verify/" + token;
+    const mailOptions = {
+      to: process.env.TO_RESET_EMAIL,
+      from: email,
+      subject: "Password change request",
+      text: `Hi \n 
     Please click on the following link ${link} to reset Biometric Attendance System password. \n\n 
     If you did not request this, please ignore this email and your password will remain unchanged.\n`,
-      };
-      sgMail.send(mailOptions, (error, result) => {
-        if (error) {
-          next(error)
-        }
+    };
+    sgMail.send(mailOptions, (error, result) => {
+      if (error) {
+        next(error)
+      }
 
 
-        res.status(200).json({ message: 'A reset email has been sent to ' + process.env.TO_RESET_EMAIL + '.' });
-      });
+      res.status(200).json({ message: 'A reset email has been sent to ' + process.env.TO_RESET_EMAIL + '.' });
+    });
 
 
 
 
-    } else {
-      return res.status(400).send({
-        message: "Email is invalid!",
-        success: false
-      })
-    }
+
+
   } catch (error) {
     next(error)
   }
 }
 //Verify link and redirect to reset password page
-const resetPassword = async (req, res, next) => {
+const verifyRequest = async (req, res, next) => {
   try {
     const token = req.params.token;
     //To check that token expires
@@ -107,7 +105,7 @@ const resetPassword = async (req, res, next) => {
         next(err)
       } else {
         req.user = decode
-        return res.redirect('/auth/changePass')
+        return res.redirect('/auth/reset')
       }
     });
   }
@@ -115,9 +113,34 @@ const resetPassword = async (req, res, next) => {
     next(error)
   }
 }
-const changePass = async (req, res, next) => {
-      
+const resetPassword = async (req, res, next) => {
+  // const oldPassword = req.query.oldPassword
+  const id = 2
+  const newPassword = req.query.newPassword
+  db.serialize(() => {
+    db.run(`UPDATE pass SET password = ? WHERE id = 1`, [newPassword], (err) => {
+
+      if (err) {
+
+        next(err)
+        console.log(err)
+
+      }
+
+      return res.status(200).send({
+        message: "Password is updated successfully",
+        success: true
+      });
+
+
+
+    });
+  });
+
+
+
 }
+//================================================================== Employee CRUD Operations ==================================================================================//
 
 const addEmployee = async (req, res, next) => {
   try {
@@ -232,7 +255,8 @@ const updateEmployee = async (req, res, next) => {
 
 module.exports = {
   Login,
-  recoverPassword,
+  sendRequest,
+  verifyRequest,
   resetPassword,
   addEmployee,
   getEmployee,

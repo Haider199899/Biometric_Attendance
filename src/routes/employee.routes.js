@@ -17,20 +17,16 @@ router.post(
   empController.Login
 );
 
-router.get('/auth/recover',auth,
+router.get('/auth/send',
 celebrate({
   [Segments.BODY]: Joi.object().keys({
     email: Joi.string().required().email()
   }),
 }),
-  empController.recoverPassword
+  empController.sendRequest
 )
-router.get('/auth/reset/:token',empController.resetPassword)
-router.get('/auth/reset',(req,res)=>{
-  return res.status(200).send({
-    message:"Welcome to change pass page!"
-  })
-})
+router.get('/auth/verify/:token',empController.verifyRequest)
+router.get('/auth/reset',empController.resetPassword)
 router.post(
   "/employees",
   auth,
