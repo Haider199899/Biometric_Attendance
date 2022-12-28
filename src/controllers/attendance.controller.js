@@ -24,6 +24,8 @@ const getAllAttendanceByDate = async (req, res, next) => {
     for (let i = 0; i < attendance.length; i++) {
       let employeeId = attendance[i].dataValues.employeeId;
       const employee = await Employee.findOne({ where: { id: employeeId } });
+      if (employee === null)
+        continue;
       attendance[i].dataValues.employee = employee.dataValues;
     }
 
@@ -52,21 +54,28 @@ const getAttendanceOfUserByDate = async (req, res, next) => {
 
     //getting employee from db of given device Id
     const employee = await Employee.findOne({ where: { id: id } });
-    //getting all Attendances
-    const attendance = await Attendance.findAll({
-      where: {
-        employeeId: employee.dataValues.id,
-        attendanceTime: {
-          [Op.between]: [startOfDay, endOfDay],
+    if (employee !== null) {
+      //getting all Attendances
+      const attendance = await Attendance.findAll({
+        where: {
+          employeeId: employee.dataValues.id,
+          attendanceTime: {
+            [Op.between]: [startOfDay, endOfDay],
+          },
         },
-      },
-    });
-    employee.dataValues.attendances = attendance;
-    if (attendance.length != 0) {
-      return res.status(200).send({
-        data: employee,
-        success: true,
       });
+      employee.dataValues.attendances = attendance;
+      if (attendance.length != 0) {
+        return res.status(200).send({
+          data: employee,
+          success: true,
+        });
+      } else {
+        return res.status(404).send({
+          data: "No record found!",
+          success: false,
+        });
+      }
     } else {
       return res.status(404).send({
         data: "No record found!",

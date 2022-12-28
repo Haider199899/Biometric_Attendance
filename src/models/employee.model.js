@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const {sequelize}=require('../config/db_connect_config')
 
 const Employee = sequelize.define('Employee', {
-  // Model attributes are defined here
+
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -22,8 +22,12 @@ const Employee = sequelize.define('Employee', {
   deviceId:{
     type:DataTypes.INTEGER,
     unique:true
-  }
+  },
+  updatedBy:{
+   type:DataTypes.STRING
+  },
+}, {
+  paranoid: true
 });
-
-module.exports={Employee};
+module.exports={Employee}
 

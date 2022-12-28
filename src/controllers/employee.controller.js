@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 dotenv.config({ path: ".env" });
 const sqlite3 = require('sqlite3');
 const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 const { Employee } = require("../models/employee.model");
 const db = new sqlite3.Database('passwords.db', sqlite3.OPEN_READWRITE, (err) => {
   if (err) {
@@ -13,7 +13,6 @@ const db = new sqlite3.Database('passwords.db', sqlite3.OPEN_READWRITE, (err) =>
 }
 
 );
-
 const Login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -63,9 +62,9 @@ const Login = async (req, res, next) => {
 //Generates token and Sends password reset email
 const sendRequest = async (req, res, next) => {
   try {
-    const email = req.query.email;
-    console.log(email)
 
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const email = req.query.email;
     const token = jwt.sign({ email }, process.env.JWT_SECRET_RESET_PASS, { expiresIn: process.env.JWT_EXPIRATION_TIME_PASS_RECOVER })
 
     let link = "http://" + process.env.HOST + ":" + process.env.PORT + "/auth/verify/" + token;
@@ -85,11 +84,6 @@ const sendRequest = async (req, res, next) => {
 
       res.status(200).json({ message: 'A reset email has been sent to ' + process.env.TO_RESET_EMAIL + '.' });
     });
-
-
-
-
-
 
   } catch (error) {
     next(error)
@@ -114,28 +108,37 @@ const verifyRequest = async (req, res, next) => {
   }
 }
 const resetPassword = async (req, res, next) => {
-  // const oldPassword = req.query.oldPassword
-  const id = 2
-  const newPassword = req.query.newPassword
+  const { oldPassword, newPassword } = req.body
   db.serialize(() => {
-    db.run(`UPDATE pass SET password = ? WHERE id = 1`, [newPassword], (err) => {
+    db.all(`SELECT * FROM pass WHERE id = 1`, (err, rows) => {
+      rows.forEach((row) => {
+        if (row.password === oldPassword) {
+          db.serialize(() => {
+            db.run(`UPDATE pass SET password = ? WHERE id = 1`, [newPassword], (err) => {
 
-      if (err) {
+              if (err) {
 
-        next(err)
-        console.log(err)
+                next(err)
+                console.log(err)
 
-      }
+              }
 
-      return res.status(200).send({
-        message: "Password is updated successfully",
-        success: true
-      });
+              return res.status(200).send({
+                message: "Password is updated successfully",
+                success: true
+              });
+            })
 
-
-
-    });
-  });
+          })
+        } else {
+          return res.status(403).send({
+            message: "Incorrect old Password!",
+            success: false
+          });
+        }
+      })
+    })
+  })
 
 
 
@@ -144,37 +147,23 @@ const resetPassword = async (req, res, next) => {
 
 const addEmployee = async (req, res, next) => {
   try {
+
     const { name, designation, email, deviceId } = req.body;
-    const empFind = await Employee.findOne({ where: { email: email } });
-    const deviceIdFound = await Employee.findOne({
-      where: { deviceId: deviceId },
+    const decodedToken = jwt.decode(req.headers['x-access-token'])
+    const updatedBy = decodedToken.email
+    const _employee = new Employee({
+      name,
+      designation,
+      email,
+      deviceId,
+      updatedBy
+    });
+    await _employee.save();
+    return res.status(200).send({
+      data: _employee,
+      success: true,
     });
 
-    if (!empFind) {
-      if (!deviceIdFound) {
-        const _employee = new Employee({
-          name,
-          designation,
-          email,
-          deviceId,
-        });
-        await _employee.save();
-        return res.status(200).send({
-          data: _employee,
-          success: true,
-        });
-      } else {
-        return res.status(403).send({
-          data: "Employee already exist with that registeration number!",
-          success: false,
-        });
-      }
-    } else {
-      return res.status(403).send({
-        data: "Employee already exist with that email!",
-        success: false,
-      });
-    }
   } catch (error) {
     next(error);
   }
@@ -183,18 +172,22 @@ const getEmployee = async (req, res, next) => {
   try {
     const id = req.params.id;
     const employee = await Employee.findOne({ where: { id: id } });
-    if (employee) {
+    if (employee === null) {
+      return res.status(404).send({
+        message: "Employee not found!",
+        success: false,
+      });
+    }
+    else {
+
       return res.status(200).send({
         data: employee,
         messgae: "Employee found!",
         success: true,
       });
-    } else {
-      return res.status(404).send({
-        messgae: "Employee not exist!",
-        success: false,
-      });
+
     }
+
   } catch (error) {
     next(error);
   }
@@ -202,7 +195,8 @@ const getEmployee = async (req, res, next) => {
 const getAllEmployee = async (req, res, next) => {
   try {
     const allEmployees = await Employee.findAll();
-    if (allEmployees) {
+
+    if (allEmployees.length != 0) {
       return res.status(200).send({
         data: allEmployees,
         success: true,
@@ -220,38 +214,66 @@ const getAllEmployee = async (req, res, next) => {
 const updateEmployee = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const { name, designation, email, deviceId } = req.body;
-    const empFind = await Employee.findOne({ where: { id: id } });
-    const empFindbyEmail = await Employee.findOne({
-      where: { email: email },
-    });
-    if (empFind) {
-      if (!empFindbyEmail) {
-        empFind.name = name;
-        empFind.designation = designation;
-        empFind.email = email;
-        empFind.deviceId = deviceId;
-        await empFind.save();
-        return res.status(200).send({
-          data: empFind,
-          success: true,
-        });
-      } else {
-        return res.status(403).send({
-          message: "Employee already exist with that email or deviceId!",
-          success: true,
-        });
-      }
-    } else {
+    const { name, designation, email} = req.body;
+
+    const decodedToken = jwt.decode(req.body.token || req.query.token || req.headers["x-access-token"])
+    const updatedBy = decodedToken.email
+    const employee = await Employee.findOne({ where: { id: id } });
+    if (employee === null) {
       return res.status(404).send({
-        data: "Employee not exist",
+        message: "Employee not found!",
+        success: false,
+      });
+    }
+
+    else {
+    
+
+        employee.name = name;
+        employee.designation = designation;
+        employee.email = email;
+        employee.updatedBy = updatedBy
+        await employee.save();
+        return res.status(200).send({
+          message: 'Employee record Updated!',
+          success: true,
+        });
+       
+
+    }
+  } catch (error) {
+
+    next(error);
+  }
+};
+const deleteEmployee = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const decodedToken = jwt.decode(req.body.token || req.query.token || req.headers["x-access-token"])
+    const updatedBy = decodedToken.email
+    const employee = await Employee.findOne({ where: { id: id } });
+    if (employee === null) {
+      return res.status(404).send({
+        message: "Employee not found!",
+        success: false,
+      });
+    } else {
+
+      await Employee.destroy({
+        where: {
+          id: id
+        }
+      });
+      employee.dataValues.updatedBy = updatedBy
+      return res.status(200).send({
+        message: "Employee deleted Successfully!",
         success: false,
       });
     }
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 module.exports = {
   Login,
@@ -262,4 +284,5 @@ module.exports = {
   getEmployee,
   getAllEmployee,
   updateEmployee,
+  deleteEmployee
 };

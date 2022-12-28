@@ -11,22 +11,32 @@ const reportOfEmployee = async (req, res, next) => {
     const dateTo = req.query.toDate;
     const start = moment(dateFrom).startOf("day").format();
     const end = moment(dateTo).endOf("day").format();
+
     const employee = await Employee.findOne({ where: { id: id } });
-    const attendances = await Attendance.findAll({
-      where: {
-        attendanceTime: {
-          [Op.between]: [start, end],
+    if (employee !== null) {
+      const attendances = await Attendance.findAll({
+        where: {
+          attendanceTime: {
+            [Op.between]: [start, end],
+          },
+          employeeId: employee.dataValues.id
+
         },
-      },
-    });
-
-    employee.dataValues.attendances = attendances;
-
-    if (employee.dataValues.attendances.length != 0) {
-      return res.status(200).send({
-        data: employee,
-        success: false,
       });
+
+      employee.dataValues.attendances = attendances;
+
+      if (employee.dataValues.attendances.length != 0) {
+        return res.status(200).send({
+          data: employee,
+          success: false,
+        });
+      } else {
+        return res.status(404).send({
+          data: "No record found!",
+          success: false,
+        });
+      }
     } else {
       return res.status(404).send({
         data: "No record found!",

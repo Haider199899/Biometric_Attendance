@@ -5,8 +5,11 @@ const { Employee } = require('./employee.model');
 const Attendance = sequelize.define('Attendance', {
   
   attendanceTime: {
-    type: DataTypes.STRING
+    type: DataTypes.DATE
   },
+  state: {
+    type:DataTypes.STRING
+  }
 });
 
 Attendance.belongsTo(Employee, { foreignKey: 'employeeId' });

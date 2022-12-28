@@ -18,15 +18,15 @@ router.post(
 );
 
 router.get('/auth/send',
-celebrate({
-  [Segments.BODY]: Joi.object().keys({
-    email: Joi.string().required().email()
+  celebrate({
+    [Segments.BODY]: Joi.object().keys({
+      email: Joi.string().required().email()
+    }),
   }),
-}),
   empController.sendRequest
 )
-router.get('/auth/verify/:token',empController.verifyRequest)
-router.get('/auth/reset',empController.resetPassword)
+router.get('/auth/verify/:token', empController.verifyRequest)
+router.get('/auth/reset', empController.resetPassword)
 router.post(
   "/employees",
   auth,
@@ -51,7 +51,7 @@ router.get(
   }),
   repController.reportOfAllEmployee
 );
-router.get("/employees", auth, empController.getAllEmployee);
+router.get("/employees", empController.getAllEmployee);
 router.get(
   "/employees/:id",
   auth,
@@ -74,7 +74,6 @@ router.put(
       name: Joi.string().required(),
       email: Joi.string().required().email(),
       designation: Joi.string().required(),
-      deviceId: Joi.number().required(),
     }),
   }),
   empController.updateEmployee
@@ -106,5 +105,13 @@ router.get(
   }),
   repController.reportOfEmployee
 );
+router.delete('/employees/:id', auth,
+  celebrate({
+    [Segments.PARAMS]: Joi.object().keys({
+      id: Joi.number().required(),
+    })
+  }),
+  empController.deleteEmployee
+)
 
 module.exports = router;
