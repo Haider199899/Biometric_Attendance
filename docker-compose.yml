@@ -1,28 +1,21 @@
-version: '3.9'
+version: "3.9"
 services:
   postgres:
     image: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: post1234
-    ports: 
-      - '5432:5432'
+      POSTGRES_DB: attendance_system
     volumes:
-      - attendance_system_db:/var/lib/postgresql/data
-
-  biometric-attendance:
-    build:
-      context: .
-    environment:
-      DB_SCHEMA: postgres
-      DB_USER: postgres
-      DB_PASSWORD: post1234
-      DB_HOST: localhost
-      DB: attendance_system
-    depends_on:
+      - pgdata:/var/lib/postgresql/data
+    ports: 
+      - "5432:5432" 
+  web:
+   image: biometric_attendance
+   depends_on:
       - postgres
-    ports:
-      - '3000:3000'
-        
+   ports:
+      - "3000:3000"
 volumes:
-  attendance_system_db:
+  pgdata:
+
