@@ -7,10 +7,6 @@ const attendanceRouter = require("./routes/attendance.routes");
 const {createDbForLoginPasswords} = require('./config/sqliteDb')
 const { ErrorHandler } = require("./middlewares/errorHandler");
 
-
-
-
-
 const app = express();
 app.use(session({secret: process.env.SESSION_SECRET}));
 const PORT = process.env.PORT;
